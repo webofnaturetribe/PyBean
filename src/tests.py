@@ -34,7 +34,7 @@ class TestPybean(unittest.TestCase):
         db.link(book2, author3)
         db.link(book, author1)
         db.link(book, author2)
-        for author in db.get_linked("author", book):
+        for author in db.get_linked(book, "author"):
             self.assertNotEqual(author.name, "shouldnotseeme")
             self.assertTrue(author.name in ["john doe", "jane doe"])
 

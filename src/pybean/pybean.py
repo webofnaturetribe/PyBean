@@ -84,7 +84,7 @@ class SQLiteWriter(object):
                 [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
         self.db.commit()
     
-    def get_linked_rows(self, table_name, bean):
+    def get_linked_rows(self, bean, table_name):
         bean_table = bean.__class__.__name__
         assoc_table = self.__create_assoc_table(bean_table, table_name)
         cursor = self.db.cursor()
@@ -149,8 +149,8 @@ class Store(object):
     def unlink(self, bean_a, bean_b):
         self.writer.unlink(bean_a, bean_b)
     
-    def get_linked(self, table_name, bean):
-        for row in self.writer.get_linked_rows(table_name, bean):
+    def get_linked(self, bean, table_name):
+        for row in self.writer.get_linked_rows(bean, table_name):
             yield self.__row_to_object(table_name, row)
 
     def __row_to_object(self, table_name, row):
