@@ -1,5 +1,6 @@
 import sqlite3
 import uuid
+from pkg_resources import parse_version
 
 class SQLiteWriter(object):
 
@@ -92,14 +93,15 @@ class SQLiteWriter(object):
             sql+= " PRIMARY KEY (" + table_a + "_uuid," + table_b + "_uuid));"
             self.db.cursor().execute(sql)
             # no real support for foreign keys until sqlite3 v3.6.19 so here's the hack
-            sql = "create trigger if not exists fk_" + table_a + "_" + assoc_table
-            sql+= " before delete on " + table_a
-            sql+= " for each row begin delete from " + assoc_table + " where " + table_a + "_uuid = OLD.uuid;end;"
-            self.db.cursor().execute(sql)
-            sql = "create trigger if not exists fk_" + table_b + "_" + assoc_table
-            sql+= " before delete on " + table_b
-            sql+= " for each row begin delete from " + assoc_table + " where " + table_b + "_uuid = OLD.uuid;end;"
-            self.db.cursor().execute(sql)
+            if cmp(parse_version(sqlite3.sqlite_version),parse_version("3.6.19")) < 0:
+                sql = "create trigger if not exists fk_" + table_a + "_" + assoc_table
+                sql+= " before delete on " + table_a
+                sql+= " for each row begin delete from " + assoc_table + " where " + table_a + "_uuid = OLD.uuid;end;"
+                self.db.cursor().execute(sql)
+                sql = "create trigger if not exists fk_" + table_b + "_" + assoc_table
+                sql+= " before delete on " + table_b
+                sql+= " for each row begin delete from " + assoc_table + " where " + table_b + "_uuid = OLD.uuid;end;"
+                self.db.cursor().execute(sql)
         return assoc_table
 
 class Store(object):
