@@ -104,14 +104,10 @@ class Store(object):
 
 
 if __name__ == "__main__":
-    db = Store(SQLiteWriter(":memory:", frozen=False))
-    bean = db.new("tabletest")
-    bean.title = "test title"
-    bean.content = "test content"
-    db.store(bean)
-    bean.title = "another test title"
-    bean.author = "desfrenes"
-    db.store(bean)
-    bean = db.load("tabletest", bean.uuid)
-    for item in db.find_by_sql("tabletest","title like ?",["another test title"]):
-        print item.author + ": " + item.content
+    library = Store(SQLiteWriter(":memory:", frozen=False))
+    book = library.new("book")
+    book.title = "Boost development with pybean"
+    book.author = "Charles Xavier"
+    library.store(book)
+    for book in library.find_by_sql("book","author like ?",["Charles Xavier"]):
+            print book.title
