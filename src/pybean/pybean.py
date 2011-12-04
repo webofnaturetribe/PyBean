@@ -34,12 +34,6 @@ class SQLiteWriter(object):
         sql += ",".join(["?" for i in keys])  +  ")"
         cursor.execute(sql, values)
         self.db.commit()
-        
-        # Get uuid back in hex
-        #cursor.execute("select * from tabletest where uuid = ?", [sqlite3.Binary(uid.bytes)])
-        #for row in cursor:
-        #    uid = uuid.UUID(bytes=row["uuid"])
-        #    print uid.hex
    
     def __create_column(self, table, column):
         if self.frozen:
@@ -66,7 +60,11 @@ class SQLiteWriter(object):
         cursor.execute(sql,replace)
         for row in cursor:
             yield row
-
+    
+    def delete(self, bean):
+        self.db.cursor().execute("delete from " + bean.__class__.__name__ + " where uuid=?",
+                [sqlite3.Binary(bean.uuid.bytes)])
+        self.db.commit()
 
 class Store(object):
     """
@@ -92,6 +90,9 @@ class Store(object):
     def find_by_sql(self, table_name, sql, replace=[]):
         for row in self.writer.get_rows("select * from " + table_name + " where " + sql, replace):
             yield self.__row_to_object(table_name, row)
+    
+    def trash(self, bean):
+        self.writer.delete(bean)
 
     def __row_to_object(self, table_name, row):
         new_object = type(table_name,(object,),{})()
@@ -101,13 +102,3 @@ class Store(object):
             else:
                 new_object.__dict__[key] = row[key]
         return new_object
-
-
-if __name__ == "__main__":
-    library = Store(SQLiteWriter(":memory:", frozen=False))
-    book = library.new("book")
-    book.title = "Boost development with pybean"
-    book.author = "Charles Xavier"
-    library.store(book)
-    for book in library.find_by_sql("book","author like ?",["Charles Xavier"]):
-            print book.title
