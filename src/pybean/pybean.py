@@ -83,6 +83,15 @@ class SQLiteWriter(object):
         self.db.cursor().execute("delete from " + assoc_table + " where " + table_a + "_uuid=? and " + table_b + "_uuid=?", 
                 [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
         self.db.commit()
+    
+    def get_linked_rows(self, table_name, bean):
+        bean_table = bean.__class__.__name__
+        assoc_table = self.__create_assoc_table(bean_table, table_name)
+        cursor = self.db.cursor()
+        cursor.execute("select t.* from " + table_name + " t inner join " + assoc_table + " a on a." + table_name + "_uuid = t.uuid where a." + bean_table + "_uuid=?",
+                [buffer(bean.uuid.bytes)])
+        for row in cursor:
+            yield row
 
     def __create_assoc_table(self, table_a, table_b):
         assoc_table = "_".join(sorted([table_a, table_b]))
@@ -139,6 +148,10 @@ class Store(object):
     
     def unlink(self, bean_a, bean_b):
         self.writer.unlink(bean_a, bean_b)
+    
+    def get_linked(self, table_name, bean):
+        for row in self.writer.get_linked_rows(table_name, bean):
+            yield self.__row_to_object(table_name, row)
 
     def __row_to_object(self, table_name, row):
         new_object = type(table_name,(object,),{})()
