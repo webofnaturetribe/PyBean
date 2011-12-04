@@ -2,25 +2,31 @@ import sqlite3
 import uuid
 
 class SQLiteWriter(object):
-    def __init__(self, db_path, freeze = True):
+
+    """
+    In frozen mode (the default), the writer will not alter db schema.
+    Just add frozen=False to enable column creation (or just add False
+    as second parameter):
+
+    query_writer = SQLiteWriter(":memory:", False)
+    """
+    def __init__(self, db_path, frozen = True):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
-        self.freeze = freeze
+        self.frozen = frozen
     
     def replace(self, bean):
         keys = []
         values = []
-        self.create_table(bean.__class__.__name__)
-        columns = self.get_columns(bean.__class__.__name__)
+        self.__create_table(bean.__class__.__name__)
+        columns = self.__get_columns(bean.__class__.__name__)
         for key in bean.__dict__:
             keys.append(key)
             if key == "uuid":
-                uid = uuid.UUID(hex=bean.__dict__[key])
-                #values.append(buffer(uid.bytes))
-                values.append(sqlite3.Binary(uid.bytes))
+                values.append(sqlite3.Binary(bean.__dict__[key].bytes))
             else:
                 if key not in columns:
-                    self.create_column(bean.__class__.__name__, key)
+                    self.__create_column(bean.__class__.__name__, key)
                 values.append(str(bean.__dict__[key]))
         cursor = self.db.cursor()
         sql  = "replace into " + bean.__class__.__name__ + "(" 
@@ -34,15 +40,15 @@ class SQLiteWriter(object):
         #for row in cursor:
         #    uid = uuid.UUID(bytes=row["uuid"])
         #    print uid.hex
-    
-    def create_column(self, table, column):
-        if self.freeze:
+   
+    def __create_column(self, table, column):
+        if self.frozen:
             return
         self.db.cursor().execute("alter table " + table + " add " + column)
 
-    def get_columns(self, table):
+    def __get_columns(self, table):
         columns = []
-        if self.freeze:
+        if self.frozen:
             return columns
         cursor = self.db.cursor()
         cursor.execute("PRAGMA table_info(" + table  + ")")
@@ -50,33 +56,62 @@ class SQLiteWriter(object):
             columns.append(row["name"])
         return columns
 
-    def create_table(self, table):
-        if self.freeze:
+    def __create_table(self, table):
+        if self.frozen:
             return
-        self.db.cursor().execute(
-            "create table if not exists " + table + "(uuid primary key)"
-            )
+        self.db.cursor().execute("create table if not exists " + table + "(uuid primary key)")
+
+    def get_rows(self, sql, replace=[]):
+        cursor = self.db.cursor()
+        cursor.execute(sql,replace)
+        for row in cursor:
+            yield row
 
 
 class Store(object):
+    """
+    A SQL writer should be passed to the constructor:
+
+    beans_store = Store(SQLiteWriter(":memory"), frozen=False)
+    """
     def __init__(self, SQLWriter):
         self.writer = SQLWriter 
     
     def new(self, table_name):
         new_object = type(table_name,(object,),{})()
-        new_object.uuid = uuid.uuid4().hex
+        new_object.uuid = uuid.uuid4()
         return new_object
 
     def store(self, bean):
         self.writer.replace(bean)
     
-    def load(table_name, uuid):
-        pass
+    def load(self, table_name, uuid):
+        for row in self.writer.get_rows("select * from " + table_name + " where uuid=?", [buffer(uuid.bytes)]):
+            return self.__row_to_object(table_name, row)
+
+    def find_by_sql(self, table_name, sql, replace=[]):
+        for row in self.writer.get_rows("select * from " + table_name + " where " + sql, replace):
+            yield self.__row_to_object(table_name, row)
+
+    def __row_to_object(self, table_name, row):
+        new_object = type(table_name,(object,),{})()
+        for key in row.keys():
+            if key == "uuid":
+                new_object.uuid = uuid.UUID(bytes=row[key])
+            else:
+                new_object.__dict__[key] = row[key]
+        return new_object
+
 
 if __name__ == "__main__":
-    db = Store(SQLiteWriter("/Users/mickael/pybean.sqlite", False))
+    db = Store(SQLiteWriter(":memory:", frozen=False))
     bean = db.new("tabletest")
     bean.title = "test title"
     bean.content = "test content"
-    print bean.uuid
     db.store(bean)
+    bean.title = "another test title"
+    bean.author = "desfrenes"
+    db.store(bean)
+    bean = db.load("tabletest", bean.uuid)
+    for item in db.find_by_sql("tabletest","title like ?",["another test title"]):
+        print item.author + ": " + item.content
