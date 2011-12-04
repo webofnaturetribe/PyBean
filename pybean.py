@@ -55,7 +55,8 @@ class SQLiteWriter(object):
     def __create_table(self, table):
         if self.frozen:
             return
-        self.db.cursor().execute("create table if not exists " + table + "(uuid primary key)")
+        sql = "create table if not exists " + table + "(uuid primary key)"
+        self.db.cursor().execute(sql)
 
     def get_rows(self, sql, replace=[]):
         cursor = self.db.cursor()
@@ -64,32 +65,32 @@ class SQLiteWriter(object):
             yield row
     
     def delete(self, bean):
-        self.db.cursor().execute("delete from " + bean.__class__.__name__ + " where uuid=?",
-                [sqlite3.Binary(bean.uuid.bytes)])
+        sql = "delete from " + bean.__class__.__name__ + " where uuid=?"
+        self.db.cursor().execute(sql,[sqlite3.Binary(bean.uuid.bytes)])
         self.db.commit()
     
     def link(self, bean_a, bean_b):
         table_a = bean_a.__class__.__name__
         table_b = bean_b.__class__.__name__
         assoc_table = self.__create_assoc_table(table_a, table_b)
-        self.db.cursor().execute("replace into " + assoc_table + "("+table_a+"_uuid,"+table_b+"_uuid) values(?,?)", 
-                [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
+        sql = "replace into " + assoc_table + "("+table_a+"_uuid,"+table_b+"_uuid) values(?,?)"
+        self.db.cursor().execute(sql, [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
         self.db.commit()
     
     def unlink(self, bean_a, bean_b):
         table_a = bean_a.__class__.__name__
         table_b = bean_b.__class__.__name__
         assoc_table = self.__create_assoc_table(table_a, table_b)
-        self.db.cursor().execute("delete from " + assoc_table + " where " + table_a + "_uuid=? and " + table_b + "_uuid=?", 
-                [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
+        sql = "delete from " + assoc_table + " where " + table_a + "_uuid=? and " + table_b + "_uuid=?"
+        self.db.cursor().execute(sql, [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)]) 
         self.db.commit()
     
     def get_linked_rows(self, bean, table_name):
         bean_table = bean.__class__.__name__
         assoc_table = self.__create_assoc_table(bean_table, table_name)
         cursor = self.db.cursor()
-        cursor.execute("select t.* from " + table_name + " t inner join " + assoc_table + " a on a." + table_name + "_uuid = t.uuid where a." + bean_table + "_uuid=?",
-                [buffer(bean.uuid.bytes)])
+        sql = "select t.* from " + table_name + " t inner join " + assoc_table + " a on a." + table_name + "_uuid = t.uuid where a." + bean_table + "_uuid=?"
+        cursor.execute(sql,[buffer(bean.uuid.bytes)])
         for row in cursor:
             yield row
 
@@ -134,7 +135,7 @@ class Store(object):
         for row in self.writer.get_rows("select * from " + table_name + " where uuid=?", [buffer(uuid.bytes)]):
             return self.__row_to_object(table_name, row)
 
-    def find_by_sql(self, table_name, sql, replace=[]):
+    def find_by_sql(self, table_name, sql = "1", replace=[]):
         for row in self.writer.get_rows("select * from " + table_name + " where " + sql, replace):
             yield self.__row_to_object(table_name, row)
     

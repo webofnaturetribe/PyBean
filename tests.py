@@ -1,24 +1,28 @@
 import unittest
-import sys
-sys.path.append("./pybean/")
+from time import time
 from pybean import SQLiteWriter, Store
 
 class TestPybean(unittest.TestCase):
     def setUp(self):
         pass
+
     def get_frozen_store(self):
         return Store(SQLiteWriter(":memory:"))
+
     def get_fluid_store(self):
         return Store(SQLiteWriter(":memory:", False))
+
     def test_new_bean_type(self):
         bean = self.get_frozen_store().new("book")
         self.assertEqual(bean.__class__.__name__, "book")
+
     def test_bean_store(self):
         db = self.get_fluid_store()
         bean = db.new("book")
         bean.title = "mac beth"
         bean.year = 1606
         db.store(bean)
+
     def test_get_linked(self):
         db = self.get_fluid_store()
         book = db.new("book")
