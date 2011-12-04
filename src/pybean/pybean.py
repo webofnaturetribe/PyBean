@@ -14,6 +14,7 @@ class SQLiteWriter(object):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.frozen = frozen
+        self.db.cursor().execute("PRAGMA foreign_keys=ON")
     
     def replace(self, bean):
         keys = []
@@ -65,6 +66,41 @@ class SQLiteWriter(object):
         self.db.cursor().execute("delete from " + bean.__class__.__name__ + " where uuid=?",
                 [sqlite3.Binary(bean.uuid.bytes)])
         self.db.commit()
+    
+    def link(self, bean_a, bean_b):
+        table_a = bean_a.__class__.__name__
+        table_b = bean_b.__class__.__name__
+        assoc_table = self.__create_assoc_table(table_a, table_b)
+        self.db.cursor().execute("replace into " + assoc_table + "("+table_a+"_uuid,"+table_b+"_uuid) values(?,?)", 
+                [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
+        self.db.commit()
+    
+    def unlink(self, bean_a, bean_b):
+        table_a = bean_a.__class__.__name__
+        table_b = bean_b.__class__.__name__
+        assoc_table = self.__create_assoc_table(table_a, table_b)
+        self.db.cursor().execute("delete from " + assoc_table + " where " + table_a + "_uuid=? and " + table_b + "_uuid=?", 
+                [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
+        self.db.commit()
+
+    def __create_assoc_table(self, table_a, table_b):
+        assoc_table = "_".join(sorted([table_a, table_b]))
+        if self.frozen == False:
+            sql = "create table if not exists " + assoc_table + "("
+            sql+= table_a + "_uuid NOT NULL REFERENCES " + table_a + "(uuid) ON DELETE cascade,"
+            sql+= table_b + "_uuid NOT NULL REFERENCES " + table_b + "(uuid) ON DELETE cascade,"
+            sql+= " PRIMARY KEY (" + table_a + "_uuid," + table_b + "_uuid));"
+            self.db.cursor().execute(sql)
+            # no real support for foreign keys until sqlite3 v3.6.19 so here's the hack
+            sql = "create trigger if not exists fk_" + table_a + "_" + assoc_table
+            sql+= " before delete on " + table_a
+            sql+= " for each row begin delete from " + assoc_table + " where " + table_a + "_uuid = OLD.uuid;end;"
+            self.db.cursor().execute(sql)
+            sql = "create trigger if not exists fk_" + table_b + "_" + assoc_table
+            sql+= " before delete on " + table_b
+            sql+= " for each row begin delete from " + assoc_table + " where " + table_b + "_uuid = OLD.uuid;end;"
+            self.db.cursor().execute(sql)
+        return assoc_table
 
 class Store(object):
     """
@@ -93,6 +129,14 @@ class Store(object):
     
     def trash(self, bean):
         self.writer.delete(bean)
+    
+    def link(self, bean_a, bean_b):
+        self.store(bean_a)
+        self.store(bean_b)
+        self.writer.link(bean_a, bean_b)
+    
+    def unlink(self, bean_a, bean_b):
+        self.writer.unlink(bean_a, bean_b)
 
     def __row_to_object(self, table_name, row):
         new_object = type(table_name,(object,),{})()
