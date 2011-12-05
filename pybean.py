@@ -11,7 +11,7 @@ class SQLiteWriter(object):
 
     query_writer = SQLiteWriter(":memory:", False)
     """
-    def __init__(self, db_path, frozen = True):
+    def __init__(self, db_path, frozen=True):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.frozen = frozen
@@ -135,11 +135,11 @@ class Store(object):
         for row in self.writer.get_rows("select * from " + table_name + " where uuid=?", [buffer(uuid.bytes)]):
             return self.__row_to_object(table_name, row)
 
-    def find_by_sql(self, table_name, sql = "1", replace=[]):
+    def find(self, table_name, sql = "1", replace=[]):
         for row in self.writer.get_rows("select * from " + table_name + " where " + sql, replace):
             yield self.__row_to_object(table_name, row)
     
-    def trash(self, bean):
+    def delete(self, bean):
         self.writer.delete(bean)
     
     def link(self, bean_a, bean_b):

@@ -41,6 +41,24 @@ class TestPybean(unittest.TestCase):
         for author in db.get_linked(book, "author"):
             self.assertNotEqual(author.name, "shouldnotseeme")
             self.assertTrue(author.name in ["john doe", "jane doe"])
+    
+    def test_find(self):
+        db = self.get_fluid_store()
+        book = db.new("book")
+        book.title = "test book"
+        db.store(book)
+        for book in db.find("book"):
+            self.assertEqual(book.title, "test book")
+    def test_find_sql(self):
+        db = self.get_fluid_store()
+        book1 = db.new("book")
+        book1.title = "tests book1"
+        db.store(book1)
+        book2 = db.new("book")
+        book2.title = "test book2"
+        db.store(book2)
+        for book in db.find("book", "title like ?",["%book2%"]):
+            self.assertEqual(book.title, "test book2")
 
 if __name__ == '__main__':
     unittest.main()
