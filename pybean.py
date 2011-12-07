@@ -73,23 +73,29 @@ class SQLiteWriter(object):
         table_a = bean_a.__class__.__name__
         table_b = bean_b.__class__.__name__
         assoc_table = self.__create_assoc_table(table_a, table_b)
-        sql = "replace into " + assoc_table + "("+table_a+"_uuid,"+table_b+"_uuid) values(?,?)"
-        self.db.cursor().execute(sql, [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
+        sql = "replace into " + assoc_table + "("+table_a+"_uuid,"+table_b
+        sql += "_uuid) values(?,?)"
+        self.db.cursor().execute(sql, 
+                [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
         self.db.commit()
     
     def unlink(self, bean_a, bean_b):
         table_a = bean_a.__class__.__name__
         table_b = bean_b.__class__.__name__
         assoc_table = self.__create_assoc_table(table_a, table_b)
-        sql = "delete from " + assoc_table + " where " + table_a + "_uuid=? and " + table_b + "_uuid=?"
-        self.db.cursor().execute(sql, [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)]) 
+        sql = "delete from " + assoc_table + " where " + table_a
+        sql += "_uuid=? and " + table_b + "_uuid=?"
+        self.db.cursor().execute(sql, i
+                [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)]) 
         self.db.commit()
     
     def get_linked_rows(self, bean, table_name):
         bean_table = bean.__class__.__name__
         assoc_table = self.__create_assoc_table(bean_table, table_name)
         cursor = self.db.cursor()
-        sql = "select t.* from " + table_name + " t inner join " + assoc_table + " a on a." + table_name + "_uuid = t.uuid where a." + bean_table + "_uuid=?"
+        sql = "select t.* from " + table_name + " t inner join " + assoc_table 
+        sql += " a on a." + table_name + "_uuid = t.uuid where a." 
+        sql += bean_table + "_uuid=?"
         cursor.execute(sql,[buffer(bean.uuid.bytes)])
         for row in cursor:
             yield row
@@ -118,7 +124,7 @@ class Store(object):
     """
     A SQL writer should be passed to the constructor:
 
-    beans_store = Store(SQLiteWriter(":memory"), frozen=False)
+    beans_save = Store(SQLiteWriter(":memory"), frozen=False)
     """
     def __init__(self, SQLWriter):
         self.writer = SQLWriter 
@@ -128,7 +134,7 @@ class Store(object):
         new_object.uuid = uuid.uuid4()
         return new_object
 
-    def store(self, bean):
+    def save(self, bean):
         self.writer.replace(bean)
     
     def load(self, table_name, uuid):
@@ -143,8 +149,8 @@ class Store(object):
         self.writer.delete(bean)
     
     def link(self, bean_a, bean_b):
-        self.store(bean_a)
-        self.store(bean_b)
+        self.save(bean_a)
+        self.save(bean_b)
         self.writer.link(bean_a, bean_b)
     
     def unlink(self, bean_a, bean_b):
