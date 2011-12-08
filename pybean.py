@@ -16,7 +16,9 @@ class SQLiteWriter(object):
         self.db.row_factory = sqlite3.Row
         self.frozen = frozen
         self.db.cursor().execute("PRAGMA foreign_keys=ON")
-    
+    def __del__(self):
+        self.db.close()
+
     def replace(self, bean):
         keys = []
         values = []
