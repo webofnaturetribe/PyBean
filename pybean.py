@@ -11,7 +11,7 @@ class SQLiteWriter(object):
 
     query_writer = SQLiteWriter(":memory:", False)
     """
-    def __init__(self, db_path, frozen=True):
+    def __init__(self, db_path=":memory:", frozen=True):
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
         self.frozen = frozen
