@@ -30,8 +30,9 @@ class SQLiteWriter(object):
                 values.append(sqlite3.Binary(bean.__dict__[key].bytes))
             else:
                 if key not in columns:
-                    self.__create_column(bean.__class__.__name__, key)
-                values.append(str(bean.__dict__[key]))
+                    self.__create_column(bean.__class__.__name__, key, 
+                            type(bean.__dict__[key]))
+                values.append(bean.__dict__[key])
         cursor = self.db.cursor()
         sql  = "replace into " + bean.__class__.__name__ + "(" 
         sql += ",".join(keys) + ") values (" 
@@ -39,10 +40,14 @@ class SQLiteWriter(object):
         cursor.execute(sql, values)
         self.db.commit()
    
-    def __create_column(self, table, column):
+    def __create_column(self, table, column, sqltype):
         if self.frozen:
             return
-        self.db.cursor().execute("alter table " + table + " add " + column)
+        if sqltype in ["float", "int"]:
+            sqltype = "NUMERIC"
+        else:
+            sqltype = "TEXT"
+        self.db.cursor().execute("alter table " + table + " add " + column + " " + sqltype)
 
     def __get_columns(self, table):
         columns = []
@@ -60,22 +65,35 @@ class SQLiteWriter(object):
         sql = "create table if not exists " + table + "(uuid primary key)"
         self.db.cursor().execute(sql)
 
-    def get_rows(self, sql, replace=[]):
+    def get_rows(self, table_name, sql = "1", replace=[]):
+        self.__create_table(table_name)
+        sql = "SELECT * FROM " + table_name + " WHERE " + sql
         cursor = self.db.cursor()
-        cursor.execute(sql,replace)
+        cursor.execute(sql, replace)
         for row in cursor:
             yield row
     
+    def get_count(self, table_name, sql="1", replace=[]):
+        self.__create_table(table_name)
+        cursor = self.db.cursor()
+        sql = "SELECT count(*) AS cnt FROM " + table_name + " WHERE " + sql
+        cursor.execute(sql, replace)
+        for row in cursor:
+            return row["cnt"]
+
     def delete(self, bean):
+        self.__create_table(bean.__class__.__name__)
         sql = "delete from " + bean.__class__.__name__ + " where uuid=?"
         self.db.cursor().execute(sql,[sqlite3.Binary(bean.uuid.bytes)])
         self.db.commit()
     
     def link(self, bean_a, bean_b):
+        self.replace(bean_a)
+        self.replace(bean_b)
         table_a = bean_a.__class__.__name__
         table_b = bean_b.__class__.__name__
         assoc_table = self.__create_assoc_table(table_a, table_b)
-        sql = "replace into " + assoc_table + "("+table_a+"_uuid,"+table_b
+        sql = "replace into " + assoc_table + "(" + table_a + "_uuid," + table_b
         sql += "_uuid) values(?,?)"
         self.db.cursor().execute(sql, 
                 [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)])
@@ -140,19 +158,20 @@ class Store(object):
         self.writer.replace(bean)
     
     def load(self, table_name, uuid):
-        for row in self.writer.get_rows("select * from " + table_name + " where uuid=?", [buffer(uuid.bytes)]):
+        for row in self.writer.get_rows(table_name, "uuid=?", [buffer(uuid.bytes)]):
             return self.__row_to_object(table_name, row)
 
+    def count(self, table_name, sql = "1", replace=[]):
+        return self.writer.get_count(table_name, sql, replace)
+
     def find(self, table_name, sql = "1", replace=[]):
-        for row in self.writer.get_rows("select * from " + table_name + " where " + sql, replace):
+        for row in self.writer.get_rows(table_name, sql, replace):
             yield self.__row_to_object(table_name, row)
     
     def delete(self, bean):
         self.writer.delete(bean)
     
     def link(self, bean_a, bean_b):
-        self.save(bean_a)
-        self.save(bean_b)
         self.writer.link(bean_a, bean_b)
     
     def unlink(self, bean_a, bean_b):

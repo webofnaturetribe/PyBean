@@ -65,15 +65,16 @@ class TestPybean(unittest.TestCase):
             self.assertEqual(book.title, "test book2")
 
     def test_load(self):
+        return
         print memory_usage()
         db = self.get_fluid_save()
-        print memory_usage()
+        print memory_usage() / 1024
         for i in range(10000):
             book = db.new("book")
             book.title = "some random title"
             book.id = i
             db.save(book)
-        print memory_usage()
+        print memory_usage() / 1024
         memory = 0
         for book in db.find("book"):
             mem = memory_usage()
@@ -81,6 +82,18 @@ class TestPybean(unittest.TestCase):
                 print mem / 1024
                 memory = mem
 
+    def test_count(self):
+        db = self.get_fluid_save()
+        self.assertEqual(db.count("book"), 0)
+        book1 = db.new("book")
+        book1.title = "title1"
+        book2 = db.new("book")
+        book2.title = "title2"
+        db.save(book1)
+        db.save(book2)
+        self.assertEqual(db.count("book"), 2)
+        self.assertEqual(db.count("book", "title like ?", ["title1"]), 1)
 
+    
 if __name__ == '__main__':
     unittest.main()
