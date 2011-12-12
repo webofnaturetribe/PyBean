@@ -184,7 +184,7 @@ class Store(object):
             yield self.__row_to_object(table_name, row)
 
     def __row_to_object(self, table_name, row):
-        new_object = type(table_name,(object,),{})()
+        new_object = type(table_name,(dict,),{})()
         for key in row.keys():
             if key == "uuid":
                 new_object.uuid = uuid.UUID(bytes=row[key])
