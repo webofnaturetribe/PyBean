@@ -1,0 +1,70 @@
+<h1>PyBean</h1>
+<p>PyBean is intended as a proof-of-concept of a Python RedBeanPHP implementation 
+(see http://www.redbeanphp.com/ for the original concept).</p>
+<p>Beans are simple Python objects with a type that maps to the table name
+and properties representing the cells of a row.</p>
+<p>PyBean is used in development mode (AKA "frozen=False"), where tables and columns are
+created on the fly, or in production mode (the default) where schema will not be altered.</p>
+<h2>Quick example</h2>
+<pre><code>from pybean import Store, SQLiteWriter
+library = Store(SQLiteWriter(":memory:", frozen=False))
+book = library.new("book")
+book.title = "Boost development with pybean"
+book.author = "Charles Xavier"
+library.store(book)
+for book in library.find_by_sql("book","author like ?",["Charles Xavier"]):
+        print book.title
+library.trash(book)
+</code></pre>
+<h2>Install Pybean</h2>
+<p>Pybean is available at PyPi. Just type the following:</p>
+<pre><code>pip install pybean
+</code></pre>
+<p>Or if you want to upgrade:</p>
+<pre><code>pip install --upgrade pybean
+</code></pre>
+<p>Pybean is tested under Python 2.7 but other versions may work.  <br />
+</p>
+<h2>Creating a Store</h2>
+<p>The store is used to save, delete and load beans. You must pass it's constructor a backend,
+known as a query writer. Currently, only a SQLite writer is available:</p>
+<pre><code>from pybean import Store, SQLiteWriter
+# "frozen=False" means the SQLiteWriter won't create tables and columns on the fly
+db = Store(SQLiteWriter("/path/to/your/sqlite/database.sqlite", frozen=False))
+</code></pre>
+<h2>Creating a new bean</h2>
+<p>Once you have a store, you can use it to create new beans:</p>
+<pre><code> book = db.new("book")
+</code></pre>
+<p>Here, we just created a new bean of type "book". The table used to store this type of bean will
+be named "book" too. Do not use reserved SQL words as this would break Pybean. Right from the start,
+a bean has a unique identifier (a python standard UUID object). You may display it like this:</p>
+<pre><code>print book.uuid.hex
+</code></pre>
+<p>You may now start to assign values to fields:</p>
+<pre><code>book.title = "Tom Sawyer"
+book.author = "Mark Twain"
+</code></pre>
+<h2>Saving a bean</h2>
+<p>Saving a bean is just a matter of using the store's save function:</p>
+<pre><code>db.save(book)
+</code></pre>
+<h2>Finding beans</h2>
+<p>Use the store's find method:</p>
+<pre><code># find all books
+for book in db.find("book"):
+    print book.title
+
+# find books where author is Mark Twain
+for book in db.find("book","author like ?",["Mark Twain"]):
+    print book.author
+</code></pre>
+<h2>Counting beans</h2>
+<p>This is similar to the find method:</p>
+<pre><code>number_of_books = db.count("book")
+number_of_mark_twain_books = db.count("book", "author like ?", ["Mark Twain"])
+</code></pre>
+<h2>Deleting beans</h2>
+<p>Use the delete method:</p>
+<pre><code>db.delete(book)
+</code></pre>
