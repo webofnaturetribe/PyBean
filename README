@@ -16,10 +16,10 @@ created on the fly, or in production mode (the default) where schema will not be
     book = library.new("book")
     book.title = "Boost development with pybean"
     book.author = "Charles Xavier"
-    library.store(book)
-    for book in library.find_by_sql("book","author like ?",["Charles Xavier"]):
+    library.save(book)
+    for book in library.find("book","author like ?",["Charles Xavier"]):
             print book.title
-    library.trash(book)
+    library.delete(book)
 
 ## Install Pybean
 

@@ -11,10 +11,10 @@ library = Store(SQLiteWriter(":memory:", frozen=False))
 book = library.new("book")
 book.title = "Boost development with pybean"
 book.author = "Charles Xavier"
-library.store(book)
-for book in library.find_by_sql("book","author like ?",["Charles Xavier"]):
+library.save(book)
+for book in library.find("book","author like ?",["Charles Xavier"]):
         print book.title
-library.trash(book)
+library.delete(book)
 </code></pre>
 <h2>Install Pybean</h2>
 <p>Pybean is available at PyPi. Just type the following:</p>
