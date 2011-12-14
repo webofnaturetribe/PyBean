@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
         name="pybean",
-        version="0.0.5",
+        version="0.0.6",
         description="Python implementation of RedBeanPHP, easy to use ORM.",
         author="Mickael Desfrenes",
         author_email="desfrenes@gmail.com",

@@ -2,7 +2,7 @@ import sqlite3
 import uuid
 from pkg_resources import parse_version
 
-version = "0.0.5"
+version = "0.0.6"
 
 class SQLiteWriter(object):
 
@@ -41,15 +41,17 @@ class SQLiteWriter(object):
         sql += ",".join(["?" for i in keys])  +  ")"
         cursor.execute(sql, values)
         self.db.commit()
-   
+
     def __create_column(self, table, column, sqltype):
         if self.frozen:
             return
-        if sqltype in ["float", "int"]:
+        if sqltype in [float, int, bool]:
             sqltype = "NUMERIC"
         else:
             sqltype = "TEXT"
-        self.db.cursor().execute("alter table " + table + " add " + column + " " + sqltype)
+        sql = "alter table " + table + " add " + column + " " + sqltype    
+        print sql
+        self.db.cursor().execute(sql)
 
     def __get_columns(self, table):
         columns = []
@@ -130,7 +132,8 @@ class SQLiteWriter(object):
             sql+= table_b + "_uuid NOT NULL REFERENCES " + table_b + "(uuid) ON DELETE cascade,"
             sql+= " PRIMARY KEY (" + table_a + "_uuid," + table_b + "_uuid));"
             self.db.cursor().execute(sql)
-            # no real support for foreign keys until sqlite3 v3.6.19 so here's the hack
+            # no real support for foreign keys until sqlite3 v3.6.19
+            # so here's the hack
             if cmp(parse_version(sqlite3.sqlite_version),parse_version("3.6.19")) < 0:
                 sql = "create trigger if not exists fk_" + table_a + "_" + assoc_table
                 sql+= " before delete on " + table_a
@@ -184,7 +187,7 @@ class Store(object):
             yield self.__row_to_object(table_name, row)
 
     def __row_to_object(self, table_name, row):
-        new_object = type(table_name,(dict,),{})()
+        new_object = type(table_name,(object,),{})()
         for key in row.keys():
             if key == "uuid":
                 new_object.uuid = uuid.UUID(bytes=row[key])
