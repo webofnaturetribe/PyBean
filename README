@@ -39,7 +39,7 @@ The store is used to save, delete and load beans. You must pass it's constructor
 known as a query writer. Currently, only a SQLite writer is available:
 
     from pybean import Store, SQLiteWriter
-    # "frozen=False" means the SQLiteWriter won't create tables and columns on the fly
+    # "frozen=True" means the SQLiteWriter won't create tables and columns on the fly
     db = Store(SQLiteWriter("/path/to/your/sqlite/database.sqlite", frozen=False))
 
 ## Creating a new bean

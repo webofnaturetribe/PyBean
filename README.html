@@ -29,7 +29,7 @@ library.delete(book)
 <p>The store is used to save, delete and load beans. You must pass it's constructor a backend,
 known as a query writer. Currently, only a SQLite writer is available:</p>
 <pre><code>from pybean import Store, SQLiteWriter
-# "frozen=False" means the SQLiteWriter won't create tables and columns on the fly
+# "frozen=True" means the SQLiteWriter won't create tables and columns on the fly
 db = Store(SQLiteWriter("/path/to/your/sqlite/database.sqlite", frozen=False))
 </code></pre>
 <h2>Creating a new bean</h2>
