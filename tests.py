@@ -2,6 +2,10 @@ import unittest
 from time import time
 from pybean import SQLiteWriter, Store
 import resource
+import uuid
+import json
+
+   
 
 def memory_usage():
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
@@ -9,6 +13,16 @@ def memory_usage():
 class TestPybean(unittest.TestCase):
     def setUp(self):
         pass
+
+    def test_boolean(self):
+        return
+        db = self.get_fluid_save()
+        book = db.new("book")
+        book.title = "another title"
+        book.published = True
+        db.save(book)
+        for book in db.find("book"):
+            self.assertTrue(book.published is True)
 
     def get_frozen_save(self):
         return Store(SQLiteWriter(":memory:"))

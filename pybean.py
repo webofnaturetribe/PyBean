@@ -50,7 +50,6 @@ class SQLiteWriter(object):
         else:
             sqltype = "TEXT"
         sql = "alter table " + table + " add " + column + " " + sqltype    
-        print sql
         self.db.cursor().execute(sql)
 
     def __get_columns(self, table):
