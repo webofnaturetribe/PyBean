@@ -72,15 +72,22 @@ class SQLiteWriter(object):
         self.__create_table(table_name)
         sql = "SELECT * FROM " + table_name + " WHERE " + sql
         cursor = self.db.cursor()
-        cursor.execute(sql, replace)
-        for row in cursor:
-            yield row
-    
+        try:
+            cursor.execute(sql, replace)
+            for row in cursor:
+                yield row
+        except sqlite3.OperationalError:
+            return
+            yield            
+   
     def get_count(self, table_name, sql="1", replace=[]):
         self.__create_table(table_name)
         cursor = self.db.cursor()
         sql = "SELECT count(*) AS cnt FROM " + table_name + " WHERE " + sql
-        cursor.execute(sql, replace)
+        try:
+            cursor.execute(sql, replace)
+        except sqlite3.OperationalError:
+            return 0
         for row in cursor:
             return row["cnt"]
 
