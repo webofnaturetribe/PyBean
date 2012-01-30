@@ -2,7 +2,7 @@ import sqlite3
 import uuid
 from pkg_resources import parse_version
 
-version = "0.0.6"
+version = "0.0.9"
 
 class SQLiteWriter(object):
 

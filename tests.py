@@ -17,8 +17,8 @@ class TestPybean(unittest.TestCase):
 
     def test_unknown_column(self):
         db = self.get_fluid_save()
-        for book in db.find("book","doesntexist = 1"):
-            self.assertTrue(False is True)
+        print db.find("book","doesntexist = 1").next()
+        #self.assertTrue(db.find("book","doesntexist = 1").next() is None)
 
     def test_boolean(self):
         return
