@@ -2,7 +2,10 @@ import sqlite3
 import uuid
 from pkg_resources import parse_version
 
-version = "0.0.9"
+__version__ = "0.0.10"
+__author__ = "Mickael Desfrenes"
+__email__ = "desfrenes@gmail.com"
+
 
 class SQLiteWriter(object):
 

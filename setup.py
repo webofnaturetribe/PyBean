@@ -1,6 +1,6 @@
 import os
 from distutils.core import setup
-
+import pybean
 # Utility function to read the README file.
 # Used for the long_description.  It's nice, because now 1) we have a top level
 # README file and 2) it's easier to type in the README file than to put a raw
@@ -10,10 +10,10 @@ def read(fname):
 
 setup(
         name="pybean",
-        version="0.0.9",
+        version=pybean.__version__,
         description="Python implementation of RedBeanPHP, easy to use ORM.",
-        author="Mickael Desfrenes",
-        author_email="desfrenes@gmail.com",
+        author=pybean.__author__,
+        author_email=pybean.__email__,
         py_modules=["pybean"],
         long_description=read('README'),
         classifiers=[
