@@ -2,7 +2,7 @@ import sqlite3
 import uuid
 from pkg_resources import parse_version
 
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 __author__ = "Mickael Desfrenes"
 __email__ = "desfrenes@gmail.com"
 
@@ -175,11 +175,11 @@ class Store(object):
         for row in self.writer.get_rows(table_name, "uuid=?", [buffer(uuid.bytes)]):
             return self.__row_to_object(table_name, row)
 
-    def count(self, table_name, sql = "1", replace=[]):
-        return self.writer.get_count(table_name, sql, replace)
+    def count(self, table_name, sql = "1", replace=None):
+        return self.writer.get_count(table_name, sql, replace if replace is not None else [])
 
-    def find(self, table_name, sql = "1", replace=[]):
-        for row in self.writer.get_rows(table_name, sql, replace):
+    def find(self, table_name, sql = "1", replace=None):
+        for row in self.writer.get_rows(table_name, sql, replace if replace is not None else []):
             yield self.__row_to_object(table_name, row)
     
     def delete(self, bean):
