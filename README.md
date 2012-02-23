@@ -9,6 +9,9 @@ and properties representing the cells of a row.
 PyBean is used in development mode (AKA "frozen=False"), where tables and columns are
 created on the fly, or in production mode (the default) where schema will not be altered.
 
+The status of PyBean is alpha forever ;-)
+Just because I use it in production doesn't mean you should.
+
 ## Quick example
 
     from pybean import Store, SQLiteWriter
@@ -89,4 +92,11 @@ This is similar to the find method:
 Use the delete method:
 
     db.delete(book)
+
+## Welcomed pull request
+
+Things I'm willing to pull if you have it:
+
+ * MySQL writer
+ * PostgreSQL writer
 
