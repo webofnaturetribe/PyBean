@@ -79,7 +79,13 @@ Use the store's find method:
     # find books where author is Mark Twain
     for book in db.find("book","author like ?",["Mark Twain"]):
         print book.author
-        
+
+find method returns an iterator. If all you want is a single instance, you could use the find_one method:
+
+    my_only_book = db.find("book")
+
+find_one takes the same exact arguments as find and returns either your instance or None    
+
 ## Counting beans
 
 This is similar to the find method:
