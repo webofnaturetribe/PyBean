@@ -15,7 +15,7 @@ setup(
         author=pybean.__author__,
         author_email=pybean.__email__,
         py_modules=["pybean"],
-        long_description=read('README'),
+        long_description=read('README.md'),
         classifiers=[
             "Development Status :: 2 - Pre-Alpha",
             "Intended Audience :: Developers",
