@@ -76,6 +76,17 @@ class TestPybean(unittest.TestCase):
         db.save(book)
         for book in db.find("book"):
             self.assertEqual(book.title, "test book")
+
+    def test_find_one(self):
+        db = self.get_fluid_save()
+        book = db.new("book")
+        book.title = "the one and only"
+        db.save(book)
+        book = db.find_one("book")
+        self.assertEqual(book.title, "the one and only")
+        doesnt_exist = db.find_one("book","title like ?",["azeazeaze"])
+        self.assertTrue(doesnt_exist is None)
+
     def test_find_sql(self):
         db = self.get_fluid_save()
         book1 = db.new("book")

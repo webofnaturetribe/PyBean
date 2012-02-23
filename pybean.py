@@ -2,7 +2,7 @@ import sqlite3
 import uuid
 from pkg_resources import parse_version
 
-__version__ = "0.0.11"
+__version__ = "0.0.12"
 __author__ = "Mickael Desfrenes"
 __email__ = "desfrenes@gmail.com"
 
@@ -181,7 +181,13 @@ class Store(object):
     def find(self, table_name, sql = "1", replace=None):
         for row in self.writer.get_rows(table_name, sql, replace if replace is not None else []):
             yield self.__row_to_object(table_name, row)
-    
+
+    def find_one(self, table_name, sql = "1", replace=None):
+        try:
+            return self.find(table_name, sql, replace).next()
+        except StopIteration:
+            return None
+
     def delete(self, bean):
         self.writer.delete(bean)
     
