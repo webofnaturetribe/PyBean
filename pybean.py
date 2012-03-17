@@ -54,6 +54,7 @@ class SQLiteWriter(object):
             sqltype = "TEXT"
         sql = "alter table " + table + " add " + column + " " + sqltype    
         self.db.cursor().execute(sql)
+        self.db.commit()
 
     def __get_columns(self, table):
         columns = []
@@ -70,6 +71,7 @@ class SQLiteWriter(object):
             return
         sql = "create table if not exists " + table + "(uuid primary key)"
         self.db.cursor().execute(sql)
+        self.db.commit()
 
     def get_rows(self, table_name, sql = "1", replace=[]):
         self.__create_table(table_name)
@@ -152,6 +154,7 @@ class SQLiteWriter(object):
                 sql+= " before delete on " + table_b
                 sql+= " for each row begin delete from " + assoc_table + " where " + table_b + "_uuid = OLD.uuid;end;"
                 self.db.cursor().execute(sql)
+        self.db.commit()        
         return assoc_table
 
 class Store(object):
