@@ -2,7 +2,7 @@ import sqlite3
 import uuid
 from pkg_resources import parse_version
 
-__version__ = "0.0.12"
+__version__ = "0.0.13"
 __author__ = "Mickael Desfrenes"
 __email__ = "desfrenes@gmail.com"
 
@@ -31,12 +31,12 @@ class SQLiteWriter(object):
         columns = self.__get_columns(bean.__class__.__name__)
         for key in bean.__dict__:
             keys.append(key)
-            if key == "uuid":
+            if key not in columns:
+                self.__create_column(bean.__class__.__name__, key,
+                        type(bean.__dict__[key]))
+            if isinstance(bean.__dict__[key], uuid.UUID):
                 values.append(sqlite3.Binary(bean.__dict__[key].bytes))
             else:
-                if key not in columns:
-                    self.__create_column(bean.__class__.__name__, key, 
-                            type(bean.__dict__[key]))
                 values.append(bean.__dict__[key])
         cursor = self.db.cursor()
         sql  = "replace into " + bean.__class__.__name__ + "(" 
@@ -157,6 +157,16 @@ class SQLiteWriter(object):
         self.db.commit()        
         return assoc_table
 
+    def delete_all(self, table_name, sql = "1", replace=[]):
+        self.__create_table(table_name)
+        cursor = self.db.cursor()
+        sql = "DELETE FROM " + table_name + " WHERE " + sql
+        try:
+            cursor.execute(sql, replace)
+            return True
+        except sqlite3.OperationalError:
+            return False
+
 class Store(object):
     """
     A SQL writer should be passed to the constructor:
@@ -176,14 +186,14 @@ class Store(object):
     
     def load(self, table_name, uuid):
         for row in self.writer.get_rows(table_name, "uuid=?", [buffer(uuid.bytes)]):
-            return self.__row_to_object(table_name, row)
+            return self.row_to_object(table_name, row)
 
     def count(self, table_name, sql = "1", replace=None):
         return self.writer.get_count(table_name, sql, replace if replace is not None else [])
 
     def find(self, table_name, sql = "1", replace=None):
         for row in self.writer.get_rows(table_name, sql, replace if replace is not None else []):
-            yield self.__row_to_object(table_name, row)
+            yield self.row_to_object(table_name, row)
 
     def find_one(self, table_name, sql = "1", replace=None):
         try:
@@ -202,9 +212,12 @@ class Store(object):
     
     def get_linked(self, bean, table_name):
         for row in self.writer.get_linked_rows(bean, table_name):
-            yield self.__row_to_object(table_name, row)
+            yield self.row_to_object(table_name, row)
 
-    def __row_to_object(self, table_name, row):
+    def delete_all(self, table_name, sql = "1", replace=None):
+        return self.writer.delete_all(table_name, sql, replace if replace is not None else [])
+
+    def row_to_object(self, table_name, row):
         new_object = type(table_name,(object,),{})()
         for key in row.keys():
             if key == "uuid":
