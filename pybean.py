@@ -73,7 +73,8 @@ class SQLiteWriter(object):
         self.db.cursor().execute(sql)
         self.db.commit()
 
-    def get_rows(self, table_name, sql = "1", replace=[]):
+    def get_rows(self, table_name, sql = "1", replace = None):
+        if replace is None : replace = []
         self.__create_table(table_name)
         sql = "SELECT * FROM " + table_name + " WHERE " + sql
         cursor = self.db.cursor()
@@ -85,7 +86,8 @@ class SQLiteWriter(object):
             return
             yield            
    
-    def get_count(self, table_name, sql="1", replace=[]):
+    def get_count(self, table_name, sql="1", replace = None):
+        if replace is None : replace = []
         self.__create_table(table_name)
         cursor = self.db.cursor()
         sql = "SELECT count(*) AS cnt FROM " + table_name + " WHERE " + sql
@@ -120,7 +122,7 @@ class SQLiteWriter(object):
         assoc_table = self.__create_assoc_table(table_a, table_b)
         sql = "delete from " + assoc_table + " where " + table_a
         sql += "_uuid=? and " + table_b + "_uuid=?"
-        self.db.cursor().execute(sql, i
+        self.db.cursor().execute(sql,
                 [buffer(bean_a.uuid.bytes), buffer(bean_b.uuid.bytes)]) 
         self.db.commit()
     
@@ -137,7 +139,7 @@ class SQLiteWriter(object):
 
     def __create_assoc_table(self, table_a, table_b):
         assoc_table = "_".join(sorted([table_a, table_b]))
-        if self.frozen == False:
+        if not self.frozen:
             sql = "create table if not exists " + assoc_table + "("
             sql+= table_a + "_uuid NOT NULL REFERENCES " + table_a + "(uuid) ON DELETE cascade,"
             sql+= table_b + "_uuid NOT NULL REFERENCES " + table_b + "(uuid) ON DELETE cascade,"
@@ -157,7 +159,8 @@ class SQLiteWriter(object):
         self.db.commit()        
         return assoc_table
 
-    def delete_all(self, table_name, sql = "1", replace=[]):
+    def delete_all(self, table_name, sql = "1", replace = None):
+        if replace is None : replace = []
         self.__create_table(table_name)
         cursor = self.db.cursor()
         sql = "DELETE FROM " + table_name + " WHERE " + sql
