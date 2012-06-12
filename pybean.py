@@ -2,7 +2,7 @@ import sqlite3
 import uuid
 from pkg_resources import parse_version
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "Mickael Desfrenes"
 __email__ = "desfrenes@gmail.com"
 
