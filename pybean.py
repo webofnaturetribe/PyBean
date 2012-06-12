@@ -84,7 +84,6 @@ class SQLiteWriter(object):
                 yield row
         except sqlite3.OperationalError:
             return
-            yield            
    
     def get_count(self, table_name, sql="1", replace = None):
         if replace is None : replace = []

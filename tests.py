@@ -128,6 +128,10 @@ class TestPybean(unittest.TestCase):
         self.assertEqual(db.count("book"), 2)
         self.assertEqual(db.count("book", "title like ?", ["title1"]), 1)
 
+    def test_iterator_exception(self):
+        for row in self.get_frozen_save().writer.get_rows("pouet"):
+            print row
+
     
 if __name__ == '__main__':
     unittest.main()
