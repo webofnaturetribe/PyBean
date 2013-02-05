@@ -1,7 +1,7 @@
 import sqlite3
 from pkg_resources import parse_version
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __author__ = "Mickael Desfrenes"
 __email__ = "desfrenes@gmail.com"
 
@@ -17,11 +17,13 @@ class SQLiteWriter(object):
     """
     def __init__(self, db_path=":memory:", frozen=True):
         self.db = sqlite3.connect(db_path)
+        self.db.isolation_level = None
         self.db.row_factory = sqlite3.Row
         self.frozen = frozen
         self.cursor = self.db.cursor()
         self.cursor.execute("PRAGMA foreign_keys=ON;")
         self.cursor.execute('PRAGMA encoding = "UTF-8";')
+        self.cursor.execute('BEGIN;')
     def __del__(self):
         self.db.close()
 
@@ -120,7 +122,6 @@ class SQLiteWriter(object):
         sql += "_id=? and " + table_b + "_id=?"
         self.cursor.execute(sql,
                 [bean_a.id, bean_b.id])
-        #self.db.commit()
     
     def get_linked_rows(self, bean, table_name):
         bean_table = bean.__class__.__name__
@@ -166,8 +167,7 @@ class SQLiteWriter(object):
     def commit(self):
         self.db.commit()
 
-    def begin(self):
-        self.cursor.execute('BEGIN;');
+
 
 class Store(object):
     """
@@ -223,9 +223,6 @@ class Store(object):
         for key in row.keys():
             new_object.__dict__[key] = row[key]
         return new_object
-
-    def begin(self):
-        self.writer.begin()
 
     def commit(self):
         self.writer.commit()

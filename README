@@ -23,6 +23,7 @@ Just because I use it in production doesn't mean you should.
     for book in library.find("book","author like ?",["Charles Xavier"]):
             print book.title
     library.delete(book)
+    library.commit()
 
 ## Install Pybean
 
