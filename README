@@ -52,10 +52,7 @@ Once you have a store, you can use it to create new beans:
      book = db.new("book")
 
 Here, we just created a new bean of type "book". The table used to store this type of bean will
-be named "book" too. Do not use reserved SQL words as this would break Pybean. Right from the start,
-a bean has a unique identifier (a python standard UUID object). You may display it like this:
-
-    print book.uuid.hex
+be named "book" too. Do not use reserved SQL words as this would break Pybean.
 
 You may now start to assign values to fields:
 

@@ -1,9 +1,6 @@
 import unittest
-from time import time
 from pybean import SQLiteWriter, Store
 import resource
-import uuid
-import json
 
    
 
@@ -97,24 +94,6 @@ class TestPybean(unittest.TestCase):
         db.save(book2)
         for book in db.find("book", "title like ?",["%book2%"]):
             self.assertEqual(book.title, "test book2")
-
-    def test_load(self):
-        return
-        print memory_usage()
-        db = self.get_fluid_save()
-        print memory_usage() / 1024
-        for i in range(10000):
-            book = db.new("book")
-            book.title = "some random title"
-            book.id = i
-            db.save(book)
-        print memory_usage() / 1024
-        memory = 0
-        for book in db.find("book"):
-            mem = memory_usage()
-            if mem > memory:
-                print mem / 1024
-                memory = mem
 
     def test_count(self):
         db = self.get_fluid_save()
