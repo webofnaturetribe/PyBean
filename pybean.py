@@ -44,7 +44,7 @@ class SQLiteWriter(object):
                         type(bean.__dict__[key]))
             values.append(bean.__dict__[key])
         sql  = write_operation + " into " + bean.__class__.__name__ + "("
-        sql += ",".join(keys) + ") values (" 
+        sql += ",".join(keys) + ") values ("
         sql += ",".join(["?" for i in keys])  +  ")"
         self.cursor.execute(sql, values)
         if write_operation == "insert":
@@ -54,11 +54,11 @@ class SQLiteWriter(object):
     def __create_column(self, table, column, sqltype):
         if self.frozen:
             return
-        if sqltype in [float, int, bool]:
+        if sqltype in [long, complex, float, int, bool]:
             sqltype = "NUMERIC"
         else:
             sqltype = "TEXT"
-        sql = "alter table " + table + " add " + column + " " + sqltype    
+        sql = "alter table " + table + " add " + column + " " + sqltype
         self.cursor.execute(sql)
 
     def __get_columns(self, table):
@@ -86,7 +86,7 @@ class SQLiteWriter(object):
                 yield row
         except sqlite3.OperationalError:
             return
-   
+
     def get_count(self, table_name, sql="1", replace = None):
         if replace is None : replace = []
         self.__create_table(table_name)
@@ -102,7 +102,7 @@ class SQLiteWriter(object):
         self.__create_table(bean.__class__.__name__)
         sql = "delete from " + bean.__class__.__name__ + " where id=?"
         self.cursor.execute(sql,[bean.id])
-    
+
     def link(self, bean_a, bean_b):
         self.replace(bean_a)
         self.replace(bean_b)
@@ -113,7 +113,7 @@ class SQLiteWriter(object):
         sql += "_id) values(?,?)"
         self.cursor.execute(sql,
                 [bean_a.id, bean_b.id])
-    
+
     def unlink(self, bean_a, bean_b):
         table_a = bean_a.__class__.__name__
         table_b = bean_b.__class__.__name__
@@ -122,11 +122,11 @@ class SQLiteWriter(object):
         sql += "_id=? and " + table_b + "_id=?"
         self.cursor.execute(sql,
                 [bean_a.id, bean_b.id])
-    
+
     def get_linked_rows(self, bean, table_name):
         bean_table = bean.__class__.__name__
         assoc_table = self.__create_assoc_table(bean_table, table_name)
-        sql = "select t.* from " + table_name + " t inner join " + assoc_table 
+        sql = "select t.* from " + table_name + " t inner join " + assoc_table
         sql += " a on a." + table_name + "_id = t.id where a."
         sql += bean_table + "_id=?"
         self.cursor.execute(sql,[bean.id])
@@ -176,15 +176,15 @@ class Store(object):
     beans_save = Store(SQLiteWriter(":memory"), frozen=False)
     """
     def __init__(self, SQLWriter):
-        self.writer = SQLWriter 
-    
+        self.writer = SQLWriter
+
     def new(self, table_name):
         new_object = type(table_name,(object,),{})()
         return new_object
 
     def save(self, bean):
         self.writer.replace(bean)
-    
+
     def load(self, table_name, id):
         for row in self.writer.get_rows(table_name, "id=?", [id]):
             return self.row_to_object(table_name, row)
@@ -204,13 +204,13 @@ class Store(object):
 
     def delete(self, bean):
         self.writer.delete(bean)
-    
+
     def link(self, bean_a, bean_b):
         self.writer.link(bean_a, bean_b)
-    
+
     def unlink(self, bean_a, bean_b):
         self.writer.unlink(bean_a, bean_b)
-    
+
     def get_linked(self, bean, table_name):
         for row in self.writer.get_linked_rows(bean, table_name):
             yield self.row_to_object(table_name, row)
