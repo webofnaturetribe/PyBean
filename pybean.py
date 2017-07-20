@@ -54,7 +54,7 @@ class SQLiteWriter(object):
     def __create_column(self, table, column, sqltype):
         if self.frozen:
             return
-        if sqltype in [long, complex, float, int, bool]:
+        if sqltype in [int, complex, float, int, bool]:
             sqltype = "NUMERIC"
         else:
             sqltype = "TEXT"
@@ -198,7 +198,7 @@ class Store(object):
 
     def find_one(self, table_name, sql = "1", replace=None):
         try:
-            return self.find(table_name, sql, replace).next()
+            return next(self.find(table_name, sql, replace))
         except StopIteration:
             return None
 
@@ -220,7 +220,7 @@ class Store(object):
 
     def row_to_object(self, table_name, row):
         new_object = type(table_name,(object,),{})()
-        for key in row.keys():
+        for key in list(row.keys()):
             new_object.__dict__[key] = row[key]
         return new_object
 
