@@ -1,6 +1,7 @@
 import sqlite3
 from pkg_resources import parse_version
 
+# Originally adapted from:
 __version__ = "0.2.1"
 __author__ = "Mickael Desfrenes"
 __email__ = "desfrenes@gmail.com"
@@ -24,6 +25,7 @@ class SQLiteWriter(object):
         self.cursor.execute("PRAGMA foreign_keys=ON;")
         self.cursor.execute('PRAGMA encoding = "UTF-8";')
         self.cursor.execute('BEGIN;')
+
     def __del__(self):
         self.db.close()
 
@@ -166,7 +168,6 @@ class SQLiteWriter(object):
 
     def commit(self):
         self.db.commit()
-
 
 
 class Store(object):
