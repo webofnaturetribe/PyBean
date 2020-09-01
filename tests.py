@@ -2,15 +2,14 @@ import unittest
 from pybean import SQLiteWriter, Store
 import resource
 
-   
 
 def memory_usage():
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 
+
 class TestPybean(unittest.TestCase):
     def setUp(self):
         pass
-
 
     def test_unknown_column(self):
         db = self.get_fluid_save()
