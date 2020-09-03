@@ -184,7 +184,7 @@ class Store(object):
         return new_object
 
     def save(self, bean):
-        self.writer.replace(bean)
+        return self.writer.replace(bean)
 
     def load(self, table_name, id):
         for row in self.writer.get_rows(table_name, "id=?", [id]):
